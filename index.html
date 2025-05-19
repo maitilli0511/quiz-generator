@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Creator & Player</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    :root {
+      --primary-color: #4f46e5;
+      --secondary-color: #f3f4f6;
+      --accent-color: #6366f1;
+      --correct-color: #22c55e;
+      --incorrect-color: #ef4444;
+      --font-family: 'Poppins', sans-serif;
+      --border-radius: 0.5rem;
+      --max-width: 680px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      padding: 1rem;
+      color: #374151;
+      user-select: none;
+    }
+
+    .app-container {
+      background: var(--secondary-color);
+      max-width: var(--max-width);
+      width: 100%;
+      border-radius: var(--border-radius);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    h1, h2 {
+      margin: 0 0 0.75rem 0;
+      font-weight: 600;
+      color: var(--primary-color);
+      user-select: none;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 0.6rem 1.25rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 10px rgba(79,70,229,0.5);
+    }
+
+    button:hover,
+    button:focus {
+      background-color: var(--accent-color);
+      outline: none;
+    }
+
+    button:disabled {
+      background-color: #a5b4fc;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .horizontal-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      border-radius: var(--border-radius);
+      border: 1.5px solid #d1d5db;
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+      font-family: var(--font-family);
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      box-shadow: 0 0 4px var(--primary-color);
+    }
+
+    .question {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 1rem 1.25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .question h3 {
+      margin-top: 0;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0 0;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.4rem;
+      cursor: pointer;
+    }
+
+    .option-item input[type="radio"] {
+      margin-right: 0.5rem;
+      cursor: pointer;
+      accent-color: var(--primary-color);
+      flex-shrink: 0;
+    }
+
+    .option-item input[type="text"] {
+      flex-grow: 1;
+      border: 1px solid #cbd5e0;
+      border-radius: var(--border-radius);
+      padding: 0.3rem 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .btn-small {
+      font-size: 0.9rem;
+      padding: 0.3rem 0.75rem;
+      margin-left: 0.5rem;
+      background-color: #e0e7ff;
+      color: #6b38ca;
+      box-shadow: none;
+      font-weight: 600;
+    }
+
+    .btn-small:hover {
+      background-color: #c7d2fe;
+      color: #6b38ca;
+    }
+
+    .btn-danger {
+      background-color: #ef44449f;
+      color: white;
+      box-shadow: none;
+    }
+
+    .btn-danger:hover {
+      background-color: #ef44449f;
+    }
+
+    .q-toolbar {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+
+    textarea {
+      height: 4rem;
+      resize: vertical;
+      font-family: var(--font-family);
+    }
+
+    .quiz-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .quiz-question-number {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #4b5563;
+      user-select: none;
+    }
+
+    .quiz-question-text {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+
+    .quiz-options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .quiz-option-item {
+      background: white;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.05);
+      font-size: 1rem;
+      color: #374151;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    .quiz-option-item:hover {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 8px var(--primary-color);
+    }
+
+    .quiz-option-item.selected {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 8px var(--primary-color);
+    }
+
+    .quiz-option-item.correct {
+      background-color: var(--correct-color);
+      color: white;
+      border-color: var(--correct-color);
+      cursor: default;
+      box-shadow: 0 0 8px var(--correct-color);
+    }
+
+    .quiz-option-item.incorrect {
+      background-color: var(--incorrect-color);
+      color: white;
+      border-color: var(--incorrect-color);
+      cursor: default;
+      opacity: 0.85;
+      box-shadow: 0 0 8px var(--incorrect-color);
+    }
+
+    .score-display {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+
+    textarea.export-box {
+      width: 100%;
+      height: 6rem;
+      border-radius: var(--border-radius);
+      border: 1.5px solid #d1d5db;
+      padding: 0.5rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      resize: none;
+      user-select: all;
+      background-color: #f9fafb;
+      margin-bottom: 1rem;
+    }
+
+    a.sharing-link {
+      user-select: all;
+      word-break: break-all;
+      color: var(--primary-color);
+      font-weight: 700;
+      text-decoration: underline;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .header {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .header button {
+      min-width: 130px;
+      flex-grow: 1;
+      max-width: 180px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 0.75rem;
+      }
+      .app-container {
+        padding: 1rem;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container" role="main" aria-label="Quiz Creator and Player Application">
+    <h1>Quiz Creator & Player</h1>
+    <div class="header">
+      <button id="btn-show-create" aria-pressed="true">Create Quiz</button>
+      <button id="btn-show-take" aria-pressed="false">Take Quiz</button>
+    </div>
+
+    <!-- Quiz Creation Screen -->
+    <section id="create-screen" class="screen active" aria-label="Quiz Creation Screen">
+      <h2>Create Your Quiz</h2>
+      <form id="quiz-form">
+        <div id="questions-container"></div>
+        <button type="button" id="add-question-btn">+ Add Question</button>
+        <div class="quiz-controls">
+          <button type="submit" id="export-btn" disabled>Export Quiz & Generate Share Link</button>
+          <button type="button" id="clear-quiz-btn" style="background-color: #ef4444; box-shadow:none;">Clear All</button>
+        </div>
+      </form>
+      <div id="export-area" style="margin-top:1rem; display:none;">
+        <label for="export-textarea" style="font-weight:600; margin-bottom: 0.25rem;">Quiz JSON Data (share or save this):</label>
+        <textarea id="export-textarea" class="export-box" readonly></textarea>
+        <label for="share-link" style="font-weight:600;">Sharable Link:</label>
+        <a href="#" target="_blank" rel="noopener" id="share-link" class="sharing-link"></a>
+      </div>
+    </section>
+
+    <!-- Quiz Taking Screen -->
+    <section id="take-screen" class="screen" aria-label="Quiz Taking Screen">
+      <h2>Take Quiz</h2>
+      <p style="margin-bottom:0.5rem;">Paste Quiz JSON Data below or open a shared link to load a quiz.</p>
+      <textarea id="quiz-import-textarea" class="export-box" placeholder="Paste quiz JSON data here..."></textarea>
+      <button id="load-quiz-btn" style="margin-bottom: 1rem;">Load Quiz</button>
+
+      <div id="quiz-play-area" style="display:none; flex-direction: column;">
+        <div class="quiz-question-number" id="play-question-number"></div>
+        <div class="quiz-question-text" id="play-question-text"></div>
+        <ul class="quiz-options-list" id="play-options-list"></ul>
+        <div class="quiz-controls" style="justify-content: center; margin-top: 1rem;">
+          <button id="play-next-btn" disabled>Next</button>
+          <button id="play-restart-btn" style="display:none; background-color: #ef4444; box-shadow:none;">Restart Quiz</button>
+        </div>
+        <div class="score-display" id="play-score-display" style="display:none;"></div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  (() => {
+    // Elements
+    const btnShowCreate = document.getElementById('btn-show-create');
+    const btnShowTake = document.getElementById('btn-show-take');
+    const createScreen = document.getElementById('create-screen');
+    const takeScreen = document.getElementById('take-screen');
+    const questionsContainer = document.getElementById('questions-container');
+    const addQuestionBtn = document.getElementById('add-question-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const clearQuizBtn = document.getElementById('clear-quiz-btn');
+    const exportArea = document.getElementById('export-area');
+    const exportTextarea = document.getElementById('export-textarea');
+    const shareLinkElem = document.getElementById('share-link');
+
+    // Take quiz elements
+    const quizImportTextarea = document.getElementById('quiz-import-textarea');
+    const loadQuizBtn = document.getElementById('load-quiz-btn');
+    const quizPlayArea = document.getElementById('quiz-play-area');
+    const playQuestionNumber = document.getElementById('play-question-number');
+    const playQuestionText = document.getElementById('play-question-text');
+    const playOptionsList = document.getElementById('play-options-list');
+    const playNextBtn = document.getElementById('play-next-btn');
+    const playRestartBtn = document.getElementById('play-restart-btn');
+    const playScoreDisplay = document.getElementById('play-score-display');
+
+    // State
+    let quizData = {
+      questions: []
+    };
+
+    // Quiz play state
+    let playCurrentQuestionIndex = 0;
+    let playScore = 0;
+    let playSelectedIndex = null;
+    let playQuizLoaded = false;
+
+    // Accessibility helper for screen readers
+    function announceForA11y(message) {
+      const liveRegion = document.getElementById('a11y-live-region');
+      if(liveRegion) {
+        liveRegion.textContent = '';
+        setTimeout(() => liveRegion.textContent = message, 100);
+      }
+    }
+
+    // Show active screen
+    function showScreen(screen) {
+      if(screen === 'create') {
+        createScreen.classList.add('active');
+        takeScreen.classList.remove('active');
+        btnShowCreate.setAttribute('aria-pressed', 'true');
+        btnShowTake.setAttribute('aria-pressed', 'false');
+      } else {
+        createScreen.classList.remove('active');
+        takeScreen.classList.add('active');
+        btnShowCreate.setAttribute('aria-pressed', 'false');
+        btnShowTake.setAttribute('aria-pressed', 'true');
+      }
+      // Reset export area
+      exportArea.style.display = 'none';
+      exportTextarea.value = '';
+      shareLinkElem.textContent = '';
+      shareLinkElem.href = '#';
+    }
+
+    // Event for switching screens
+    btnShowCreate.addEventListener('click', () => showScreen('create'));
+    btnShowTake.addEventListener('click', () => showScreen('take'));
+
+    // Helpers to create elements for quiz creation
+    function createOptionElement(qIndex, oIndex, optionValue, isCorrect, onRemove) {
+      const div = document.createElement('div');
+      div.className = 'option-item';
+
+      // Radio for correct answer
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = `correct-option-${qIndex}`;
+      radio.checked = isCorrect;
+      radio.setAttribute('aria-label', `Mark option ${oIndex + 1} as correct`);
+      radio.addEventListener('change', () => {
+        // Mark the option at index oIndex as correct for question qIndex
+        quizData.questions[qIndex].correctOptionIndex = oIndex;
+        saveQuizDataFromDOM();
+        // Refresh radios for that question to reflect changes (should be automatic)
+      });
+
+      // Input text for option value
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = `Option ${oIndex + 1}`;
+      input.value = optionValue;
+      input.setAttribute('aria-label', `Option ${oIndex + 1} text for question ${qIndex + 1}`);
+      input.required = true;
+      input.addEventListener('input', (e) => {
+        // Update quizData
+        quizData.questions[qIndex].options[oIndex] = e.target.value;
+        saveQuizDataFromDOM();
+      });
+
+      // Remove option button, only show if more than 2 options left
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn-small btn-danger';
+      removeBtn.textContent = 'Remove';
+      removeBtn.title = 'Remove this option';
+      removeBtn.addEventListener('click', () => {
+        onRemove(oIndex);
+      });
+
+      div.appendChild(radio);
+      div.appendChild(input);
+      if (quizData.questions[qIndex].options.length > 2) {
+        div.appendChild(removeBtn);
+      }
+
+      return div;
+    }
+
+    function createQuestionElement(questionData, index) {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.setAttribute('data-qindex', index);
+
+      const header = document.createElement('h3');
+      header.textContent = `Question ${index + 1}`;
+      div.appendChild(header);
+
+      // Question text input
+      const questionTextInput = document.createElement('textarea');
+      questionTextInput.placeholder = 'Enter your question here...';
+      questionTextInput.value = questionData.question;
+      questionTextInput.required = true;
+      questionTextInput.rows = 3;
+      questionTextInput.setAttribute('aria-label', `Question ${index + 1} text`);
+      questionTextInput.addEventListener('input', (e) => {
+        quizData.questions[index].question = e.target.value;
+        saveQuizDataFromDOM();
+      });
+      div.appendChild(questionTextInput);
+
+      // Options container
+      const optionsList = document.createElement('div');
+      optionsList.className = 'options-list';
+      div.appendChild(optionsList);
+
+      function removeOption(oIndex) {
+        if(quizData.questions[index].options.length <= 2) return;
+        quizData.questions[index].options.splice(oIndex, 1);
+        // Adjust correct option index if needed
+        if(quizData.questions[index].correctOptionIndex === oIndex) {
+          quizData.questions[index].correctOptionIndex = 0;
+        } else if(quizData.questions[index].correctOptionIndex > oIndex) {
+          quizData.questions[index].correctOptionIndex--;
+        }
+        renderQuestions();
+        saveQuizDataFromDOM();
+      }
+
+      function addOption() {
+        quizData.questions[index].options.push('');
+        renderQuestions();
+        saveQuizDataFromDOM();
+      }
+
+      // Render options inputs
+      questionData.options.forEach((opt, oIdx) => {
+        const optElem = createOptionElement(index, oIdx, opt, questionData.correctOptionIndex === oIdx, removeOption);
+        optionsList.appendChild(optElem);
+      });
+
+      // Add option button
+      const addOptBtn = document.createElement('button');
+      addOptBtn.type = 'button';
+      addOptBtn.className = 'btn-small';
+      addOptBtn.textContent = '+ Add Option';
+      addOptBtn.addEventListener('click', addOption);
+      div.appendChild(addOptBtn);
+
+      // Toolbar: Remove question
+      const toolbar = document.createElement('div');
+      toolbar.className = 'q-toolbar';
+      const removeQBtn = document.createElement('button');
+      removeQBtn.type = 'button';
+      removeQBtn.className = 'btn-small btn-danger';
+      removeQBtn.textContent = 'Remove Question';
+      removeQBtn.addEventListener('click', () => {
+        quizData.questions.splice(index,1);
+        renderQuestions();
+        saveQuizDataFromDOM();
+      });
+      toolbar.appendChild(removeQBtn);
+      div.appendChild(toolbar);
+
+      return div;
+    }
+
+    function renderQuestions() {
+      questionsContainer.innerHTML = '';
+      if (quizData.questions.length === 0) {
+        // Start with 1 question by default
+        quizData.questions.push({
+          question: '',
+          options: ['', ''],
+          correctOptionIndex: 0
+        });
+      }
+      quizData.questions.forEach((q, i) => {
+        const qElem = createQuestionElement(q, i);
+        questionsContainer.appendChild(qElem);
+      });
+      validateQuizData();
+    }
+
+    // Read current DOM inputs into quizData
+    function saveQuizDataFromDOM() {
+      // This syncs quizData with the newest content from inputs, but usually changes update it already.
+      // For precaution, let's check for correct answers and options validity.
+
+      // Clean up empty questions or options if needed could be done here.
+
+      validateQuizData();
+    }
+
+    // Validate quiz data for enabling export button
+    function validateQuizData() {
+      // Quiz is valid if all questions have text, at least 2 options, all options non-empty, and a correct option set
+      let valid = true;
+      quizData.questions.forEach(q => {
+        if (!q.question.trim()) valid = false;
+        if (!Array.isArray(q.options) || q.options.length < 2) valid = false;
+        if (q.options.some(opt => !opt.trim())) valid = false;
+        if (
+          typeof q.correctOptionIndex !== 'number' ||
+          q.correctOptionIndex < 0 ||
+          q.correctOptionIndex >= q.options.length
+        ) valid = false;
+      });
+      exportBtn.disabled = !valid;
+    }
+
+    // Create shareable link with encoded quiz data in URL hash
+    function generateShareLink(data) {
+      try {
+        const jsonString = JSON.stringify(data);
+        // Encode with encodeURIComponent and then btoa for compactness
+        const encoded = btoa(encodeURIComponent(jsonString));
+        const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
+        return url;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Decode quiz data from URL hash
+    function decodeQuizFromHash() {
+      try {
+        const hash = window.location.hash.slice(1);
+        if(!hash) return null;
+        const decoded = decodeURIComponent(atob(hash));
+        const obj = JSON.parse(decoded);
+        if(obj && Array.isArray(obj.questions)) return obj;
+        return null;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    // Export quiz JSON and generate sharing link
+    exportBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      saveQuizDataFromDOM();
+      try {
+        const jsonStr = JSON.stringify(quizData, null, 2);
+        exportTextarea.value = jsonStr;
+        exportArea.style.display = 'block';
+
+        const shareUrl = generateShareLink(quizData);
+        if(shareUrl) {
+          shareLinkElem.textContent = shareUrl;
+          shareLinkElem.href = shareUrl;
+        } else {
+          shareLinkElem.textContent = 'Error generating shareable link';
+          shareLinkElem.href = '#';
+        }
+      } catch (err) {
+        exportTextarea.value = 'Error exporting quiz data, please check your input.';
+        exportArea.style.display = 'block';
+        shareLinkElem.textContent = '';
+        shareLinkElem.href = '#';
+      }
+    });
+
+    // Add question button
+    addQuestionBtn.addEventListener('click', () => {
+      quizData.questions.push({
+        question: '',
+        options: ['', ''],
+        correctOptionIndex: 0
+      });
+      renderQuestions();
+      saveQuizDataFromDOM();
+    });
+
+    // Clear quiz
+    clearQuizBtn.addEventListener('click', () => {
+      if(confirm('Are you sure you want to clear the entire quiz? This action cannot be undone.')) {
+        quizData = { questions: [] };
+        renderQuestions();
+        exportArea.style.display = 'none';
+        exportTextarea.value = '';
+        shareLinkElem.textContent = '';
+        shareLinkElem.href = '#';
+      }
+    });
+
+    // --- Quiz Playing Logic ---
+
+    // Reset quiz play state UI
+    function resetPlayState() {
+      playCurrentQuestionIndex = 0;
+      playScore = 0;
+      playSelectedIndex = null;
+      playQuizLoaded = false;
+      playScoreDisplay.style.display = 'none';
+      playRestartBtn.style.display = 'none';
+      playNextBtn.disabled = true;
+      quizPlayArea.style.display = 'none';
+      playQuestionNumber.textContent = '';
+      playQuestionText.textContent = '';
+      playOptionsList.innerHTML = '';
+    }
+
+    // Load quiz data for play
+    function loadQuizForPlay(data) {
+      if(!data || !Array.isArray(data.questions) || data.questions.length === 0) {
+        alert('Invalid quiz data! Please provide valid quiz JSON.');
+        return false;
+      }
+      quizData = data;
+      playCurrentQuestionIndex = 0;
+      playScore = 0;
+      playSelectedIndex = null;
+      playQuizLoaded = true;
+      playScoreDisplay.style.display = 'none';
+      playRestartBtn.style.display = 'none';
+      playNextBtn.disabled = true;
+
+      quizPlayArea.style.display = 'flex';
+      renderPlayQuestion();
+      return true;
+    }
+
+    // Render current quiz question for playing
+    function renderPlayQuestion() {
+      playSelectedIndex = null;
+      playNextBtn.disabled = true;
+      const q = quizData.questions[playCurrentQuestionIndex];
+
+      playQuestionNumber.textContent = `Question ${playCurrentQuestionIndex + 1} of ${quizData.questions.length}`;
+      playQuestionText.textContent = q.question;
+      playOptionsList.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const li = document.createElement('li');
+        li.className = 'quiz-option-item';
+        li.setAttribute('role', 'button');
+        li.setAttribute('tabindex', '0');
+        li.textContent = opt;
+        li.addEventListener('click', () => selectPlayOption(idx));
+        li.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectPlayOption(idx);
+          }
+        });
+        playOptionsList.appendChild(li);
+      });
+    }
+
+    function selectPlayOption(index) {
+      if(playSelectedIndex !== null) return; // locked answer
+      playSelectedIndex = index;
+      playNextBtn.disabled = false;
+
+      // Highlight selected
+      const optionElems = playOptionsList.querySelectorAll('.quiz-option-item');
+      optionElems.forEach((elem, idx) => {
+        elem.classList.remove('selected');
+        if(idx === index) elem.classList.add('selected');
+      });
+    }
+
+    // Show answer feedback and update score
+    function showPlayAnswerFeedback() {
+      const q = quizData.questions[playCurrentQuestionIndex];
+      const optionsElems = playOptionsList.querySelectorAll('.quiz-option-item');
+
+      optionsElems.forEach((el, idx) => {
+        el.style.cursor = 'default';
+        el.classList.remove('selected');
+        if(idx === q.correctOptionIndex) {
+          el.classList.add('correct');
+        } else if(idx === playSelectedIndex && idx !== q.correctOptionIndex) {
+          el.classList.add('incorrect');
+        }
+      });
+
+      if(playSelectedIndex === q.correctOptionIndex) {
+        playScore++;
+      }
+    }
+
+    // Proceed to next question or end quiz
+    function playNext() {
+      if(playSelectedIndex === null) return;
+      showPlayAnswerFeedback();
+      playNextBtn.disabled = true;
+      playNextBtn.textContent = (playCurrentQuestionIndex === quizData.questions.length - 1) ? 'See Results' : 'Next';
+
+      setTimeout(() => {
+        playCurrentQuestionIndex++;
+        if(playCurrentQuestionIndex < quizData.questions.length) {
+          playNextBtn.textContent = 'Next';
+          renderPlayQuestion();
+        } else {
+          showPlayResult();
+        }
+      }, 1500);
+    }
+
+    // Show final score
+    function showPlayResult() {
+      playQuestionNumber.textContent = '';
+      playQuestionText.textContent = '';
+      playOptionsList.innerHTML = '';
+      playScoreDisplay.textContent = `You scored ${playScore} out of ${quizData.questions.length}!`;
+      playScoreDisplay.style.display = 'block';
+      playNextBtn.style.display = 'none';
+      playRestartBtn.style.display = 'inline-block';
+      announceForA11y(`Quiz complete. You scored ${playScore} out of ${quizData.questions.length}.`);
+    }
+
+    // Restart playing current quiz
+    function restartPlayQuiz() {
+      playCurrentQuestionIndex = 0;
+      playScore = 0;
+      playSelectedIndex = null;
+      playScoreDisplay.style.display = 'none';
+      playRestartBtn.style.display = 'none';
+      playNextBtn.style.display = 'inline-block';
+      playNextBtn.disabled = true;
+      renderPlayQuestion();
+    }
+
+    // Event listeners for quiz play controls
+    playNextBtn.addEventListener('click', playNext);
+    playRestartBtn.addEventListener('click', restartPlayQuiz);
+
+    // Load quiz from textarea (take quiz screen)
+    loadQuizBtn.addEventListener('click', () => {
+      const input = quizImportTextarea.value.trim();
+      if(!input) {
+        alert('Please paste valid quiz JSON data.');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(input);
+        if(loadQuizForPlay(parsed)) {
+          announceForA11y('Quiz loaded successfully. Ready to start playing.');
+        } else {
+          alert('Invalid quiz data format.');
+        }
+      } catch(e) {
+        alert('Invalid JSON format. Please double-check your input.');
+      }
+    });
+
+    // On page load, check if quiz JSON is encoded in URL hash
+    function tryLoadQuizFromURLHash() {
+      const hash = window.location.hash.slice(1);
+      if(!hash) return false;
+      try {
+        const jsonStr = decodeURIComponent(atob(hash));
+        const quizFromURL = JSON.parse(jsonStr);
+        if (loadQuizForPlay(quizFromURL)) {
+          showScreen('take');
+          return true;
+        }
+      } catch(e) {}
+      return false;
+    }
+
+    // Initial setup
+    function init() {
+      showScreen('create');
+      renderQuestions();
+      tryLoadQuizFromURLHash();
+    }
+
+    init();
+  })();
+</script>
+
+<!-- Accessibility live region for announcements -->
+<div aria-live="polite" aria-atomic="true" id="a11y-live-region" style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;"></div>
+
+</body>
+</html>
+
